@@ -1,0 +1,11 @@
+name = "sqlite"
+version = "0.1.0"
+authors = ["weiwenhao <wwhacker@qq.com>"]
+license = "MIT"
+type = "lib"
+
+[links]
+libsqlite3 = { linux_arm64 = 'lib/sqlite3_linux_arm64.o', darwin_arm64 = 'lib/sqlite3_darwin_arm64.o', darwin_amd64 = 'lib/sqlite3_darwin_amd64.o', linux_amd64 = 'lib/sqlite3_linux_amd64.o' }
+
+
+[dependencies]

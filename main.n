@@ -1,0 +1,1033 @@
+import libc
+
+// SQLite 版本信息
+const SQLITE_VERSION = "3.50.4"
+const SQLITE_VERSION_NUMBER = 3050004
+
+// SQLite 结果代码
+const SQLITE_OK = 0           // 成功
+const SQLITE_ERROR = 1        // 通用错误
+const SQLITE_INTERNAL = 2     // 内部逻辑错误
+const SQLITE_PERM = 3         // 访问权限被拒绝
+const SQLITE_ABORT = 4        // 回调函数请求中止
+const SQLITE_BUSY = 5         // 数据库文件被锁定
+const SQLITE_LOCKED = 6       // 数据库中的表被锁定
+const SQLITE_NOMEM = 7        // malloc() 失败
+const SQLITE_READONLY = 8     // 尝试写入只读数据库
+const SQLITE_INTERRUPT = 9    // 操作被 sqlite3_interrupt() 中断
+const SQLITE_IOERR = 10       // 发生某种磁盘 I/O 错误
+const SQLITE_CORRUPT = 11     // 数据库磁盘映像格式错误
+const SQLITE_NOTFOUND = 12    // 未知操作码
+const SQLITE_FULL = 13        // 插入失败，因为数据库已满
+const SQLITE_CANTOPEN = 14    // 无法打开数据库文件
+const SQLITE_PROTOCOL = 15    // 数据库锁定协议错误
+const SQLITE_EMPTY = 16       // 内部使用
+const SQLITE_SCHEMA = 17      // 数据库架构已更改
+const SQLITE_TOOBIG = 18      // 字符串或 BLOB 超出大小限制
+const SQLITE_CONSTRAINT = 19  // 由于约束违规而中止
+const SQLITE_MISMATCH = 20    // 数据类型不匹配
+const SQLITE_MISUSE = 21      // 库使用不当
+const SQLITE_NOLFS = 22       // 在主机上不支持大文件
+const SQLITE_AUTH = 23        // 授权被拒绝
+const SQLITE_FORMAT = 24      // 不再使用
+const SQLITE_RANGE = 25       // 第二个参数超出范围
+const SQLITE_NOTADB = 26      // 文件不是数据库
+const SQLITE_NOTICE = 27      // 来自 sqlite3_log() 的通知
+const SQLITE_WARNING = 28     // 来自 sqlite3_log() 的警告
+const SQLITE_ROW = 100        // sqlite3_step() 有另一行准备好
+const SQLITE_DONE = 101       // sqlite3_step() 已完成执行
+
+// SQLite 打开标志
+const SQLITE_OPEN_READONLY = 0x00000001      // 只读
+const SQLITE_OPEN_READWRITE = 0x00000002     // 读写
+const SQLITE_OPEN_CREATE = 0x00000004        // 创建
+const SQLITE_OPEN_DELETEONCLOSE = 0x00000008 // 关闭时删除
+const SQLITE_OPEN_EXCLUSIVE = 0x00000010     // 独占
+const SQLITE_OPEN_AUTOPROXY = 0x00000020     // 自动代理
+const SQLITE_OPEN_URI = 0x00000040           // URI
+const SQLITE_OPEN_MEMORY = 0x00000080        // 内存
+const SQLITE_OPEN_MAIN_DB = 0x00000100       // 主数据库
+const SQLITE_OPEN_TEMP_DB = 0x00000200       // 临时数据库
+const SQLITE_OPEN_TRANSIENT_DB = 0x00000400  // 瞬态数据库
+const SQLITE_OPEN_MAIN_JOURNAL = 0x00000800  // 主日志
+const SQLITE_OPEN_TEMP_JOURNAL = 0x00001000  // 临时日志
+const SQLITE_OPEN_SUBJOURNAL = 0x00002000    // 子日志
+const SQLITE_OPEN_SUPER_JOURNAL = 0x00004000 // 超级日志
+const SQLITE_OPEN_NOMUTEX = 0x00008000       // 无互斥锁
+const SQLITE_OPEN_FULLMUTEX = 0x00010000     // 完全互斥锁
+const SQLITE_OPEN_SHAREDCACHE = 0x00020000   // 共享缓存
+const SQLITE_OPEN_PRIVATECACHE = 0x00040000  // 私有缓存
+const SQLITE_OPEN_WAL = 0x00080000           // WAL
+const SQLITE_OPEN_NOFOLLOW = 0x01000000      // 不跟随
+const SQLITE_OPEN_EXRESCODE = 0x02000000     // 扩展结果代码
+
+// SQLite 数据类型
+const SQLITE_INTEGER = 1  // 整数
+const SQLITE_FLOAT = 2    // 浮点数
+const SQLITE_BLOB = 4     // BLOB
+const SQLITE_NULL = 5     // NULL
+const SQLITE_TEXT = 3     // 文本
+const SQLITE3_TEXT = 3    // 文本
+
+// SQLite 配置选项
+const SQLITE_CONFIG_SINGLETHREAD = 1   // 单线程
+const SQLITE_CONFIG_MULTITHREAD = 2    // 多线程
+const SQLITE_CONFIG_SERIALIZED = 3     // 序列化
+const SQLITE_CONFIG_MALLOC = 4         // 内存分配
+const SQLITE_CONFIG_GETMALLOC = 5      // 获取内存分配
+const SQLITE_CONFIG_SCRATCH = 6        // 临时内存
+const SQLITE_CONFIG_PAGECACHE = 7      // 页缓存
+const SQLITE_CONFIG_HEAP = 8           // 堆
+const SQLITE_CONFIG_MEMSTATUS = 9      // 内存状态
+const SQLITE_CONFIG_MUTEX = 10         // 互斥锁
+const SQLITE_CONFIG_GETMUTEX = 11      // 获取互斥锁
+const SQLITE_CONFIG_PCACHE = 14        // 页缓存
+const SQLITE_CONFIG_GETPCACHE = 15     // 获取页缓存
+const SQLITE_CONFIG_LOG = 16           // 日志
+const SQLITE_CONFIG_URI = 17           // URI
+const SQLITE_CONFIG_PCACHE2 = 18       // 页缓存2
+const SQLITE_CONFIG_GETPCACHE2 = 19    // 获取页缓存2
+const SQLITE_CONFIG_COVERING_INDEX_SCAN = 20  // 覆盖索引扫描
+const SQLITE_CONFIG_SQLLOG = 21        // SQL日志
+const SQLITE_CONFIG_MMAP_SIZE = 22     // 内存映射大小
+const SQLITE_CONFIG_WIN32_HEAPSIZE = 23 // Win32堆大小
+const SQLITE_CONFIG_PCACHE_HDRSZ = 24  // 页缓存头大小
+const SQLITE_CONFIG_PMASZ = 25         // PMA大小
+const SQLITE_CONFIG_STMTJRNL_SPILL = 26 // 语句日志溢出
+const SQLITE_CONFIG_SMALL_MALLOC = 27  // 小内存分配
+const SQLITE_CONFIG_SORTERREF_SIZE = 28 // 排序器引用大小
+const SQLITE_CONFIG_MEMDB_MAXSIZE = 29 // 内存数据库最大大小
+const SQLITE_CONFIG_ROWID_IN_VIEW = 30 // 视图中的ROWID
+
+// SQLite 数据库配置选项
+const SQLITE_DBCONFIG_MAINDBNAME = 1000            // 主数据库名称
+const SQLITE_DBCONFIG_LOOKASIDE = 1001             // 预留内存
+const SQLITE_DBCONFIG_ENABLE_FKEY = 1002           // 启用外键
+const SQLITE_DBCONFIG_ENABLE_TRIGGER = 1003        // 启用触发器
+const SQLITE_DBCONFIG_ENABLE_FTS3_TOKENIZER = 1004 // 启用FTS3分词器
+const SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION = 1005 // 启用加载扩展
+const SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE = 1006     // 关闭时不检查点
+const SQLITE_DBCONFIG_ENABLE_QPSG = 1007           // 启用QPSG
+const SQLITE_DBCONFIG_TRIGGER_EQP = 1008           // 触发器EQP
+const SQLITE_DBCONFIG_RESET_DATABASE = 1009        // 重置数据库
+const SQLITE_DBCONFIG_DEFENSIVE = 1010             // 防御性
+const SQLITE_DBCONFIG_WRITABLE_SCHEMA = 1011       // 可写架构
+const SQLITE_DBCONFIG_LEGACY_ALTER_TABLE = 1012    // 传统ALTER TABLE
+const SQLITE_DBCONFIG_DQS_DML = 1013              // DQS DML
+const SQLITE_DBCONFIG_DQS_DDL = 1014              // DQS DDL
+const SQLITE_DBCONFIG_ENABLE_VIEW = 1015           // 启用视图
+const SQLITE_DBCONFIG_LEGACY_FILE_FORMAT = 1016    // 传统文件格式
+const SQLITE_DBCONFIG_TRUSTED_SCHEMA = 1017        // 受信任架构
+const SQLITE_DBCONFIG_STMT_SCANSTATUS = 1018       // 语句扫描状态
+const SQLITE_DBCONFIG_REVERSE_SCANORDER = 1019     // 反向扫描顺序
+const SQLITE_DBCONFIG_ENABLE_ATTACH_CREATE = 1020  // 启用附加创建
+const SQLITE_DBCONFIG_ENABLE_ATTACH_WRITE = 1021   // 启用附加写入
+const SQLITE_DBCONFIG_ENABLE_COMMENTS = 1022       // 启用注释
+const SQLITE_DBCONFIG_MAX = 1022                   // 最大值
+
+// SQLite 准备标志
+const SQLITE_PREPARE_PERSISTENT = 0x01  // 持久化
+const SQLITE_PREPARE_NORMALIZE = 0x02   // 规范化
+const SQLITE_PREPARE_NO_VTAB = 0x04     // 无虚拟表
+const SQLITE_PREPARE_DONT_LOG = 0x10    // 不记录日志
+
+// SQLite 限制
+const SQLITE_LIMIT_LENGTH = 0                    // 长度限制
+const SQLITE_LIMIT_SQL_LENGTH = 1               // SQL长度限制
+const SQLITE_LIMIT_COLUMN = 2                   // 列限制
+const SQLITE_LIMIT_EXPR_DEPTH = 3               // 表达式深度限制
+const SQLITE_LIMIT_COMPOUND_SELECT = 4          // 复合选择限制
+const SQLITE_LIMIT_VDBE_OP = 5                  // VDBE操作限制
+const SQLITE_LIMIT_FUNCTION_ARG = 6             // 函数参数限制
+const SQLITE_LIMIT_ATTACHED = 7                 // 附加限制
+const SQLITE_LIMIT_LIKE_PATTERN_LENGTH = 8      // LIKE模式长度限制
+const SQLITE_LIMIT_VARIABLE_NUMBER = 9          // 变量数量限制
+const SQLITE_LIMIT_TRIGGER_DEPTH = 10           // 触发器深度限制
+const SQLITE_LIMIT_WORKER_THREADS = 11          // 工作线程限制
+
+// SQLite 文本编码
+const SQLITE_UTF8 = 1           // UTF-8
+const SQLITE_UTF16LE = 2        // UTF-16 小端
+const SQLITE_UTF16BE = 3        // UTF-16 大端
+const SQLITE_UTF16 = 4          // UTF-16
+const SQLITE_ANY = 5            // 任意
+const SQLITE_UTF16_ALIGNED = 8  // UTF-16 对齐
+
+// SQLite 函数标志
+const SQLITE_DETERMINISTIC = 0x000000800  // 确定性
+const SQLITE_DIRECTONLY = 0x000080000     // 仅直接
+const SQLITE_SUBTYPE = 0x000100000        // 子类型
+const SQLITE_INNOCUOUS = 0x000200000      // 无害
+const SQLITE_RESULT_SUBTYPE = 0x001000000 // 结果子类型
+const SQLITE_SELFORDER1 = 0x002000000     // 自排序1
+
+// SQLite 授权操作代码
+const SQLITE_DENY = 1    // 拒绝
+const SQLITE_IGNORE = 2  // 忽略
+
+const SQLITE_CREATE_INDEX = 1           // 创建索引
+const SQLITE_CREATE_TABLE = 2           // 创建表
+const SQLITE_CREATE_TEMP_INDEX = 3      // 创建临时索引
+const SQLITE_CREATE_TEMP_TABLE = 4      // 创建临时表
+const SQLITE_CREATE_TEMP_TRIGGER = 5    // 创建临时触发器
+const SQLITE_CREATE_TEMP_VIEW = 6       // 创建临时视图
+const SQLITE_CREATE_TRIGGER = 7         // 创建触发器
+const SQLITE_CREATE_VIEW = 8            // 创建视图
+const SQLITE_DELETE = 9                 // 删除
+const SQLITE_DROP_INDEX = 10            // 删除索引
+const SQLITE_DROP_TABLE = 11            // 删除表
+const SQLITE_DROP_TEMP_INDEX = 12       // 删除临时索引
+const SQLITE_DROP_TEMP_TABLE = 13       // 删除临时表
+const SQLITE_DROP_TEMP_TRIGGER = 14     // 删除临时触发器
+const SQLITE_DROP_TEMP_VIEW = 15        // 删除临时视图
+const SQLITE_DROP_TRIGGER = 16          // 删除触发器
+const SQLITE_DROP_VIEW = 17             // 删除视图
+const SQLITE_INSERT = 18                // 插入
+const SQLITE_PRAGMA = 19                // PRAGMA
+const SQLITE_READ = 20                  // 读取
+const SQLITE_SELECT = 21                // 选择
+const SQLITE_TRANSACTION = 22           // 事务
+const SQLITE_UPDATE = 23                // 更新
+const SQLITE_ATTACH = 24                // 附加
+const SQLITE_DETACH = 25                // 分离
+const SQLITE_ALTER_TABLE = 26           // 修改表
+const SQLITE_REINDEX = 27               // 重建索引
+const SQLITE_ANALYZE = 28               // 分析
+const SQLITE_CREATE_VTABLE = 29         // 创建虚拟表
+const SQLITE_DROP_VTABLE = 30           // 删除虚拟表
+const SQLITE_FUNCTION = 31              // 函数
+const SQLITE_SAVEPOINT = 32             // 保存点
+const SQLITE_COPY = 0                   // 复制
+const SQLITE_RECURSIVE = 33             // 递归
+
+// SQLite 跟踪标志
+const SQLITE_TRACE_STMT = 0x01     // 语句跟踪
+const SQLITE_TRACE_PROFILE = 0x02  // 性能跟踪
+const SQLITE_TRACE_ROW = 0x04      // 行跟踪
+const SQLITE_TRACE_CLOSE = 0x08    // 关闭跟踪
+
+// SQLite 事务状态
+const SQLITE_TXN_NONE = 0   // 无事务
+const SQLITE_TXN_READ = 1   // 读事务
+const SQLITE_TXN_WRITE = 2  // 写事务
+
+// SQLite 检查点模式
+const SQLITE_CHECKPOINT_PASSIVE = 0   // 被动检查点
+const SQLITE_CHECKPOINT_FULL = 1      // 完全检查点
+const SQLITE_CHECKPOINT_RESTART = 2   // 重启检查点
+const SQLITE_CHECKPOINT_TRUNCATE = 3  // 截断检查点
+
+// SQLite 状态参数
+const SQLITE_STATUS_MEMORY_USED = 0          // 已使用内存
+const SQLITE_STATUS_PAGECACHE_USED = 1       // 已使用页缓存
+const SQLITE_STATUS_PAGECACHE_OVERFLOW = 2   // 页缓存溢出
+const SQLITE_STATUS_SCRATCH_USED = 3         // 已使用临时内存
+const SQLITE_STATUS_SCRATCH_OVERFLOW = 4     // 临时内存溢出
+const SQLITE_STATUS_MALLOC_SIZE = 5          // 内存分配大小
+const SQLITE_STATUS_PARSER_STACK = 6         // 解析器栈
+const SQLITE_STATUS_PAGECACHE_SIZE = 7       // 页缓存大小
+const SQLITE_STATUS_SCRATCH_SIZE = 8         // 临时内存大小
+const SQLITE_STATUS_MALLOC_COUNT = 9         // 内存分配计数
+
+// SQLite 数据库状态参数
+const SQLITE_DBSTATUS_LOOKASIDE_USED = 0       // 已使用预留内存
+const SQLITE_DBSTATUS_CACHE_USED = 1           // 已使用缓存
+const SQLITE_DBSTATUS_SCHEMA_USED = 2          // 已使用架构
+const SQLITE_DBSTATUS_STMT_USED = 3            // 已使用语句
+const SQLITE_DBSTATUS_LOOKASIDE_HIT = 4        // 预留内存命中
+const SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE = 5  // 预留内存未命中大小
+const SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL = 6  // 预留内存未命中满
+const SQLITE_DBSTATUS_CACHE_HIT = 7            // 缓存命中
+const SQLITE_DBSTATUS_CACHE_MISS = 8           // 缓存未命中
+const SQLITE_DBSTATUS_CACHE_WRITE = 9          // 缓存写入
+const SQLITE_DBSTATUS_DEFERRED_FKS = 10        // 延迟外键
+const SQLITE_DBSTATUS_CACHE_USED_SHARED = 11   // 已使用共享缓存
+const SQLITE_DBSTATUS_CACHE_SPILL = 12         // 缓存溢出
+const SQLITE_DBSTATUS_MAX = 12                 // 最大值
+
+// SQLite 语句状态参数
+const SQLITE_STMTSTATUS_FULLSCAN_STEP = 1   // 全扫描步骤
+const SQLITE_STMTSTATUS_SORT = 2            // 排序
+const SQLITE_STMTSTATUS_AUTOINDEX = 3       // 自动索引
+const SQLITE_STMTSTATUS_VM_STEP = 4         // 虚拟机步骤
+const SQLITE_STMTSTATUS_REPREPARE = 5       // 重新准备
+const SQLITE_STMTSTATUS_RUN = 6             // 运行
+const SQLITE_STMTSTATUS_FILTER_MISS = 7     // 过滤器未命中
+const SQLITE_STMTSTATUS_FILTER_HIT = 8      // 过滤器命中
+const SQLITE_STMTSTATUS_MEMUSED = 99        // 已使用内存
+
+// SQLite 类型定义
+type sqlite3_t = struct{}                    // SQLite 数据库连接
+type sqlite3_stmt_t = struct{}               // SQLite 预编译语句
+type sqlite3_value_t = struct{}              // SQLite 值
+type sqlite3_context_t = struct{}            // SQLite 上下文
+type sqlite3_int64_t = i64                   // SQLite 64位整数
+type sqlite3_uint64_t = u64                  // SQLite 64位无符号整数
+type sqlite3_filename_t = anyptr             // SQLite 文件名
+type sqlite3_mutex_t = struct{}              // SQLite 互斥锁
+type sqlite3_file_t = struct{}               // SQLite 文件
+type sqlite3_vfs_t = struct{}                // SQLite 虚拟文件系统
+type sqlite3_backup_t = struct{}             // SQLite 备份
+type sqlite3_blob_t = struct{}               // SQLite BLOB
+type sqlite3_str_t = struct{}                // SQLite 字符串构建器
+
+// SQLite 回调函数类型
+type sqlite3_callback_t = fn(anyptr, i32, rawptr<anyptr>, rawptr<anyptr>):i32
+type sqlite3_destructor_type_t = fn(anyptr)
+
+// SQLite 内存方法结构
+type sqlite3_mem_methods_t = struct{
+    anyptr x_malloc_func      // malloc 函数指针
+    anyptr x_free_func        // free 函数指针
+    anyptr x_realloc_func     // realloc 函数指针
+    anyptr x_size_func        // size 函数指针
+    anyptr x_roundup_func     // roundup 函数指针
+    anyptr x_init_func        // init 函数指针
+    anyptr x_shutdown_func    // shutdown 函数指针
+    anyptr p_app_data         // 应用数据
+}
+
+// SQLite 版本和库信息函数
+#linkid sqlite3_libversion
+fn sqlite3_libversion():libc.cstr
+
+#linkid sqlite3_sourceid
+fn sqlite3_sourceid():libc.cstr
+
+#linkid sqlite3_libversion_number
+fn sqlite3_libversion_number():i32
+
+#linkid sqlite3_compileoption_used
+fn sqlite3_compileoption_used(libc.cstr z_opt_name):i32
+
+#linkid sqlite3_compileoption_get
+fn sqlite3_compileoption_get(i32 n):libc.cstr
+
+#linkid sqlite3_threadsafe
+fn sqlite3_threadsafe():i32
+
+// SQLite 数据库连接函数
+#linkid sqlite3_open
+fn sqlite3_open(libc.cstr filename, rawptr<rawptr<sqlite3_t>> pp_db):i32
+
+#linkid sqlite3_open16
+fn sqlite3_open16(anyptr filename, rawptr<rawptr<sqlite3_t>> pp_db):i32
+
+#linkid sqlite3_open_v2
+fn sqlite3_open_v2(libc.cstr filename, rawptr<rawptr<sqlite3_t>> pp_db, i32 flags, libc.cstr z_vfs):i32
+
+#linkid sqlite3_close
+fn sqlite3_close(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_close_v2
+fn sqlite3_close_v2(rawptr<sqlite3_t> db):i32
+
+// SQLite 错误处理函数
+#linkid sqlite3_errcode
+fn sqlite3_errcode(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_extended_errcode
+fn sqlite3_extended_errcode(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_errmsg
+fn sqlite3_errmsg(rawptr<sqlite3_t> db):libc.cstr
+
+#linkid sqlite3_errmsg16
+fn sqlite3_errmsg16(rawptr<sqlite3_t> db):anyptr
+
+#linkid sqlite3_errstr
+fn sqlite3_errstr(i32 rc):libc.cstr
+
+#linkid sqlite3_error_offset
+fn sqlite3_error_offset(rawptr<sqlite3_t> db):i32
+
+// SQLite 执行函数
+#linkid sqlite3_exec
+fn sqlite3_exec(rawptr<sqlite3_t> db, libc.cstr sql, anyptr callback, anyptr arg, rawptr<libc.cstr> errmsg):i32
+
+// SQLite 语句准备函数
+#linkid sqlite3_prepare
+fn sqlite3_prepare(rawptr<sqlite3_t> db, libc.cstr z_sql, i32 n_byte, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<libc.cstr> pz_tail):i32
+
+#linkid sqlite3_prepare_v2
+fn sqlite3_prepare_v2(rawptr<sqlite3_t> db, libc.cstr z_sql, i32 n_byte, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<libc.cstr> pz_tail):i32
+
+#linkid sqlite3_prepare_v3
+fn sqlite3_prepare_v3(rawptr<sqlite3_t> db, libc.cstr z_sql, i32 n_byte, u32 prep_flags, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<libc.cstr> pz_tail):i32
+
+#linkid sqlite3_prepare16
+fn sqlite3_prepare16(rawptr<sqlite3_t> db, anyptr z_sql, i32 n_byte, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<anyptr> pz_tail):i32
+
+#linkid sqlite3_prepare16_v2
+fn sqlite3_prepare16_v2(rawptr<sqlite3_t> db, anyptr z_sql, i32 n_byte, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<anyptr> pz_tail):i32
+
+#linkid sqlite3_prepare16_v3
+fn sqlite3_prepare16_v3(rawptr<sqlite3_t> db, anyptr z_sql, i32 n_byte, u32 prep_flags, rawptr<rawptr<sqlite3_stmt_t>> pp_stmt, rawptr<anyptr> pz_tail):i32
+
+// SQLite 语句执行函数
+#linkid sqlite3_step
+fn sqlite3_step(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_reset
+fn sqlite3_reset(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_finalize
+fn sqlite3_finalize(rawptr<sqlite3_stmt_t> stmt):i32
+
+// SQLite 参数绑定函数
+#linkid sqlite3_bind_blob
+fn sqlite3_bind_blob(rawptr<sqlite3_stmt_t> stmt, i32 index, anyptr value, i32 n, anyptr destructor):i32
+
+#linkid sqlite3_bind_blob64
+fn sqlite3_bind_blob64(rawptr<sqlite3_stmt_t> stmt, i32 index, anyptr value, sqlite3_uint64_t n, anyptr destructor):i32
+
+#linkid sqlite3_bind_double
+fn sqlite3_bind_double(rawptr<sqlite3_stmt_t> stmt, i32 index, f64 value):i32
+
+#linkid sqlite3_bind_int
+fn sqlite3_bind_int(rawptr<sqlite3_stmt_t> stmt, i32 index, i32 value):i32
+
+#linkid sqlite3_bind_int64
+fn sqlite3_bind_int64(rawptr<sqlite3_stmt_t> stmt, i32 index, sqlite3_int64_t value):i32
+
+#linkid sqlite3_bind_null
+fn sqlite3_bind_null(rawptr<sqlite3_stmt_t> stmt, i32 index):i32
+
+#linkid sqlite3_bind_text
+fn sqlite3_bind_text(rawptr<sqlite3_stmt_t> stmt, i32 index, libc.cstr value, i32 n, anyptr destructor):i32
+
+#linkid sqlite3_bind_text16
+fn sqlite3_bind_text16(rawptr<sqlite3_stmt_t> stmt, i32 index, anyptr value, i32 n, anyptr destructor):i32
+
+#linkid sqlite3_bind_text64
+fn sqlite3_bind_text64(rawptr<sqlite3_stmt_t> stmt, i32 index, libc.cstr value, sqlite3_uint64_t n, anyptr destructor, u8 encoding):i32
+
+#linkid sqlite3_bind_value
+fn sqlite3_bind_value(rawptr<sqlite3_stmt_t> stmt, i32 index, rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_bind_pointer
+fn sqlite3_bind_pointer(rawptr<sqlite3_stmt_t> stmt, i32 index, anyptr p, libc.cstr type_name, anyptr destructor):i32
+
+#linkid sqlite3_bind_zeroblob
+fn sqlite3_bind_zeroblob(rawptr<sqlite3_stmt_t> stmt, i32 index, i32 n):i32
+
+#linkid sqlite3_bind_zeroblob64
+fn sqlite3_bind_zeroblob64(rawptr<sqlite3_stmt_t> stmt, i32 index, sqlite3_uint64_t n):i32
+
+// SQLite 参数信息函数
+#linkid sqlite3_bind_parameter_count
+fn sqlite3_bind_parameter_count(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_bind_parameter_name
+fn sqlite3_bind_parameter_name(rawptr<sqlite3_stmt_t> stmt, i32 index):libc.cstr
+
+#linkid sqlite3_bind_parameter_index
+fn sqlite3_bind_parameter_index(rawptr<sqlite3_stmt_t> stmt, libc.cstr name):i32
+
+#linkid sqlite3_clear_bindings
+fn sqlite3_clear_bindings(rawptr<sqlite3_stmt_t> stmt):i32
+
+// SQLite 列信息函数
+#linkid sqlite3_column_count
+fn sqlite3_column_count(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_column_name
+fn sqlite3_column_name(rawptr<sqlite3_stmt_t> stmt, i32 n):libc.cstr
+
+#linkid sqlite3_column_name16
+fn sqlite3_column_name16(rawptr<sqlite3_stmt_t> stmt, i32 n):anyptr
+
+#linkid sqlite3_column_database_name
+fn sqlite3_column_database_name(rawptr<sqlite3_stmt_t> stmt, i32 n):libc.cstr
+
+#linkid sqlite3_column_database_name16
+fn sqlite3_column_database_name16(rawptr<sqlite3_stmt_t> stmt, i32 n):anyptr
+
+#linkid sqlite3_column_table_name
+fn sqlite3_column_table_name(rawptr<sqlite3_stmt_t> stmt, i32 n):libc.cstr
+
+#linkid sqlite3_column_table_name16
+fn sqlite3_column_table_name16(rawptr<sqlite3_stmt_t> stmt, i32 n):anyptr
+
+#linkid sqlite3_column_origin_name
+fn sqlite3_column_origin_name(rawptr<sqlite3_stmt_t> stmt, i32 n):libc.cstr
+
+#linkid sqlite3_column_origin_name16
+fn sqlite3_column_origin_name16(rawptr<sqlite3_stmt_t> stmt, i32 n):anyptr
+
+#linkid sqlite3_column_decltype
+fn sqlite3_column_decltype(rawptr<sqlite3_stmt_t> stmt, i32 n):libc.cstr
+
+#linkid sqlite3_column_decltype16
+fn sqlite3_column_decltype16(rawptr<sqlite3_stmt_t> stmt, i32 n):anyptr
+
+// SQLite 列数据获取函数
+#linkid sqlite3_data_count
+fn sqlite3_data_count(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_column_blob
+fn sqlite3_column_blob(rawptr<sqlite3_stmt_t> stmt, i32 i_col):anyptr
+
+#linkid sqlite3_column_double
+fn sqlite3_column_double(rawptr<sqlite3_stmt_t> stmt, i32 i_col):f64
+
+#linkid sqlite3_column_int
+fn sqlite3_column_int(rawptr<sqlite3_stmt_t> stmt, i32 i_col):i32
+
+#linkid sqlite3_column_int64
+fn sqlite3_column_int64(rawptr<sqlite3_stmt_t> stmt, i32 i_col):sqlite3_int64_t
+
+#linkid sqlite3_column_text
+fn sqlite3_column_text(rawptr<sqlite3_stmt_t> stmt, i32 i_col):libc.cstr
+
+#linkid sqlite3_column_text16
+fn sqlite3_column_text16(rawptr<sqlite3_stmt_t> stmt, i32 i_col):anyptr
+
+#linkid sqlite3_column_value
+fn sqlite3_column_value(rawptr<sqlite3_stmt_t> stmt, i32 i_col):rawptr<sqlite3_value_t>
+
+#linkid sqlite3_column_bytes
+fn sqlite3_column_bytes(rawptr<sqlite3_stmt_t> stmt, i32 i_col):i32
+
+#linkid sqlite3_column_bytes16
+fn sqlite3_column_bytes16(rawptr<sqlite3_stmt_t> stmt, i32 i_col):i32
+
+#linkid sqlite3_column_type
+fn sqlite3_column_type(rawptr<sqlite3_stmt_t> stmt, i32 i_col):i32
+
+// SQLite 值处理函数
+#linkid sqlite3_value_blob
+fn sqlite3_value_blob(rawptr<sqlite3_value_t> value):anyptr
+
+#linkid sqlite3_value_double
+fn sqlite3_value_double(rawptr<sqlite3_value_t> value):f64
+
+#linkid sqlite3_value_int
+fn sqlite3_value_int(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_int64
+fn sqlite3_value_int64(rawptr<sqlite3_value_t> value):sqlite3_int64_t
+
+#linkid sqlite3_value_pointer
+fn sqlite3_value_pointer(rawptr<sqlite3_value_t> value, libc.cstr type_name):anyptr
+
+#linkid sqlite3_value_text
+fn sqlite3_value_text(rawptr<sqlite3_value_t> value):libc.cstr
+
+#linkid sqlite3_value_text16
+fn sqlite3_value_text16(rawptr<sqlite3_value_t> value):anyptr
+
+#linkid sqlite3_value_text16le
+fn sqlite3_value_text16le(rawptr<sqlite3_value_t> value):anyptr
+
+#linkid sqlite3_value_text16be
+fn sqlite3_value_text16be(rawptr<sqlite3_value_t> value):anyptr
+
+#linkid sqlite3_value_bytes
+fn sqlite3_value_bytes(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_bytes16
+fn sqlite3_value_bytes16(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_type
+fn sqlite3_value_type(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_numeric_type
+fn sqlite3_value_numeric_type(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_nochange
+fn sqlite3_value_nochange(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_frombind
+fn sqlite3_value_frombind(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_encoding
+fn sqlite3_value_encoding(rawptr<sqlite3_value_t> value):i32
+
+#linkid sqlite3_value_subtype
+fn sqlite3_value_subtype(rawptr<sqlite3_value_t> value):u32
+
+#linkid sqlite3_value_dup
+fn sqlite3_value_dup(rawptr<sqlite3_value_t> value):rawptr<sqlite3_value_t>
+
+#linkid sqlite3_value_free
+fn sqlite3_value_free(rawptr<sqlite3_value_t> value)
+
+// SQLite 结果设置函数
+#linkid sqlite3_result_blob
+fn sqlite3_result_blob(rawptr<sqlite3_context_t> ctx, anyptr value, i32 n, anyptr destructor)
+
+#linkid sqlite3_result_blob64
+fn sqlite3_result_blob64(rawptr<sqlite3_context_t> ctx, anyptr value, sqlite3_uint64_t n, anyptr destructor)
+
+#linkid sqlite3_result_double
+fn sqlite3_result_double(rawptr<sqlite3_context_t> ctx, f64 value)
+
+#linkid sqlite3_result_error
+fn sqlite3_result_error(rawptr<sqlite3_context_t> ctx, libc.cstr msg, i32 n)
+
+#linkid sqlite3_result_error16
+fn sqlite3_result_error16(rawptr<sqlite3_context_t> ctx, anyptr msg, i32 n)
+
+#linkid sqlite3_result_error_toobig
+fn sqlite3_result_error_toobig(rawptr<sqlite3_context_t> ctx)
+
+#linkid sqlite3_result_error_nomem
+fn sqlite3_result_error_nomem(rawptr<sqlite3_context_t> ctx)
+
+#linkid sqlite3_result_error_code
+fn sqlite3_result_error_code(rawptr<sqlite3_context_t> ctx, i32 error_code)
+
+#linkid sqlite3_result_int
+fn sqlite3_result_int(rawptr<sqlite3_context_t> ctx, i32 value)
+
+#linkid sqlite3_result_int64
+fn sqlite3_result_int64(rawptr<sqlite3_context_t> ctx, sqlite3_int64_t value)
+
+#linkid sqlite3_result_null
+fn sqlite3_result_null(rawptr<sqlite3_context_t> ctx)
+
+#linkid sqlite3_result_text
+fn sqlite3_result_text(rawptr<sqlite3_context_t> ctx, libc.cstr value, i32 n, anyptr destructor)
+
+#linkid sqlite3_result_text64
+fn sqlite3_result_text64(rawptr<sqlite3_context_t> ctx, libc.cstr value, sqlite3_uint64_t n, anyptr destructor, u8 encoding)
+
+#linkid sqlite3_result_text16
+fn sqlite3_result_text16(rawptr<sqlite3_context_t> ctx, anyptr value, i32 n, anyptr destructor)
+
+#linkid sqlite3_result_text16le
+fn sqlite3_result_text16le(rawptr<sqlite3_context_t> ctx, anyptr value, i32 n, anyptr destructor)
+
+#linkid sqlite3_result_text16be
+fn sqlite3_result_text16be(rawptr<sqlite3_context_t> ctx, anyptr value, i32 n, anyptr destructor)
+
+#linkid sqlite3_result_value
+fn sqlite3_result_value(rawptr<sqlite3_context_t> ctx, rawptr<sqlite3_value_t> value)
+
+#linkid sqlite3_result_pointer
+fn sqlite3_result_pointer(rawptr<sqlite3_context_t> ctx, anyptr p, libc.cstr type_name, anyptr destructor)
+
+#linkid sqlite3_result_zeroblob
+fn sqlite3_result_zeroblob(rawptr<sqlite3_context_t> ctx, i32 n)
+
+#linkid sqlite3_result_zeroblob64
+fn sqlite3_result_zeroblob64(rawptr<sqlite3_context_t> ctx, sqlite3_uint64_t n):i32
+
+#linkid sqlite3_result_subtype
+fn sqlite3_result_subtype(rawptr<sqlite3_context_t> ctx, u32 subtype)
+
+// SQLite 聚合上下文函数
+#linkid sqlite3_aggregate_context
+fn sqlite3_aggregate_context(rawptr<sqlite3_context_t> ctx, i32 n_bytes):anyptr
+
+#linkid sqlite3_user_data
+fn sqlite3_user_data(rawptr<sqlite3_context_t> ctx):anyptr
+
+#linkid sqlite3_context_db_handle
+fn sqlite3_context_db_handle(rawptr<sqlite3_context_t> ctx):rawptr<sqlite3_t>
+
+#linkid sqlite3_get_auxdata
+fn sqlite3_get_auxdata(rawptr<sqlite3_context_t> ctx, i32 n):anyptr
+
+#linkid sqlite3_set_auxdata
+fn sqlite3_set_auxdata(rawptr<sqlite3_context_t> ctx, i32 n, anyptr data, anyptr destructor)
+
+// SQLite 数据库信息函数
+#linkid sqlite3_last_insert_rowid
+fn sqlite3_last_insert_rowid(rawptr<sqlite3_t> db):sqlite3_int64_t
+
+#linkid sqlite3_set_last_insert_rowid
+fn sqlite3_set_last_insert_rowid(rawptr<sqlite3_t> db, sqlite3_int64_t rowid)
+
+#linkid sqlite3_changes
+fn sqlite3_changes(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_changes64
+fn sqlite3_changes64(rawptr<sqlite3_t> db):sqlite3_int64_t
+
+#linkid sqlite3_total_changes
+fn sqlite3_total_changes(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_total_changes64
+fn sqlite3_total_changes64(rawptr<sqlite3_t> db):sqlite3_int64_t
+
+#linkid sqlite3_interrupt
+fn sqlite3_interrupt(rawptr<sqlite3_t> db)
+
+#linkid sqlite3_is_interrupted
+fn sqlite3_is_interrupted(rawptr<sqlite3_t> db):i32
+
+#linkid sqlite3_complete
+fn sqlite3_complete(libc.cstr sql):i32
+
+#linkid sqlite3_complete16
+fn sqlite3_complete16(anyptr sql):i32
+
+// SQLite 忙处理函数
+#linkid sqlite3_busy_handler
+fn sqlite3_busy_handler(rawptr<sqlite3_t> db, anyptr handler, anyptr user_data):i32
+
+#linkid sqlite3_busy_timeout
+fn sqlite3_busy_timeout(rawptr<sqlite3_t> db, i32 ms):i32
+
+// SQLite 内存管理函数
+#linkid sqlite3_malloc
+fn sqlite3_malloc(i32 size):anyptr
+
+#linkid sqlite3_malloc64
+fn sqlite3_malloc64(sqlite3_uint64_t size):anyptr
+
+#linkid sqlite3_realloc
+fn sqlite3_realloc(anyptr p, i32 size):anyptr
+
+#linkid sqlite3_realloc64
+fn sqlite3_realloc64(anyptr p, sqlite3_uint64_t size):anyptr
+
+#linkid sqlite3_free
+fn sqlite3_free(anyptr p)
+
+#linkid sqlite3_msize
+fn sqlite3_msize(anyptr p):sqlite3_uint64_t
+
+#linkid sqlite3_memory_used
+fn sqlite3_memory_used():sqlite3_int64_t
+
+#linkid sqlite3_memory_highwater
+fn sqlite3_memory_highwater(i32 reset_flag):sqlite3_int64_t
+
+// SQLite 随机数函数
+#linkid sqlite3_randomness
+fn sqlite3_randomness(i32 n, anyptr p)
+
+// SQLite 配置函数
+#linkid sqlite3_config
+fn sqlite3_config(i32 option, anyptr arg1, anyptr arg2, anyptr arg3, anyptr arg4):i32
+
+#linkid sqlite3_config
+fn sqlite3_config_custom(i32 option, anyptr arg1):i32
+
+#linkid sqlite3_db_config
+fn sqlite3_db_config(rawptr<sqlite3_t> db, i32 op, anyptr arg1, anyptr arg2, anyptr arg3):i32
+
+#linkid sqlite3_extended_result_codes
+fn sqlite3_extended_result_codes(rawptr<sqlite3_t> db, i32 onoff):i32
+
+// SQLite 限制函数
+#linkid sqlite3_limit
+fn sqlite3_limit(rawptr<sqlite3_t> db, i32 id, i32 new_val):i32
+
+// SQLite 语句信息函数
+#linkid sqlite3_sql
+fn sqlite3_sql(rawptr<sqlite3_stmt_t> stmt):libc.cstr
+
+#linkid sqlite3_expanded_sql
+fn sqlite3_expanded_sql(rawptr<sqlite3_stmt_t> stmt):libc.cstr
+
+#linkid sqlite3_stmt_readonly
+fn sqlite3_stmt_readonly(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_stmt_isexplain
+fn sqlite3_stmt_isexplain(rawptr<sqlite3_stmt_t> stmt):i32
+
+#linkid sqlite3_stmt_explain
+fn sqlite3_stmt_explain(rawptr<sqlite3_stmt_t> stmt, i32 e_mode):i32
+
+#linkid sqlite3_stmt_busy
+fn sqlite3_stmt_busy(rawptr<sqlite3_stmt_t> stmt):i32
+
+// SQLite 表格结果函数
+#linkid sqlite3_get_table
+fn sqlite3_get_table(rawptr<sqlite3_t> db, libc.cstr z_sql, rawptr<rawptr<libc.cstr>> paz_result, rawptr<i32> pn_row, rawptr<i32> pn_column, rawptr<libc.cstr> pz_errmsg):i32
+
+#linkid sqlite3_free_table
+fn sqlite3_free_table(rawptr<libc.cstr> result)
+
+// SQLite 字符串格式化函数
+#linkid sqlite3_vmprintf
+fn sqlite3_vmprintf(libc.cstr format, anyptr args):libc.cstr
+
+#linkid sqlite3_vsnprintf
+fn sqlite3_vsnprintf(i32 size, libc.cstr buffer, libc.cstr format, anyptr args):libc.cstr
+
+// SQLite 授权函数
+#linkid sqlite3_set_authorizer
+fn sqlite3_set_authorizer(rawptr<sqlite3_t> db, anyptr x_auth, anyptr p_user_data):i32
+
+// SQLite 跟踪函数
+#linkid sqlite3_trace_v2
+fn sqlite3_trace_v2(rawptr<sqlite3_t> db, u32 u_mask, anyptr x_callback, anyptr p_ctx):i32
+
+#linkid sqlite3_progress_handler
+fn sqlite3_progress_handler(rawptr<sqlite3_t> db, i32 n, anyptr handler, anyptr user_data)
+
+// SQLite URI 参数函数
+#linkid sqlite3_uri_parameter
+fn sqlite3_uri_parameter(sqlite3_filename_t z, libc.cstr z_param):libc.cstr
+
+#linkid sqlite3_uri_boolean
+fn sqlite3_uri_boolean(sqlite3_filename_t z, libc.cstr z_param, i32 b_default):i32
+
+#linkid sqlite3_uri_int64
+fn sqlite3_uri_int64(sqlite3_filename_t z, libc.cstr z_param, sqlite3_int64_t default_val):sqlite3_int64_t
+
+#linkid sqlite3_uri_key
+fn sqlite3_uri_key(sqlite3_filename_t z, i32 n):libc.cstr
+
+// SQLite 文件名函数
+#linkid sqlite3_filename_database
+fn sqlite3_filename_database(sqlite3_filename_t filename):libc.cstr
+
+#linkid sqlite3_filename_journal
+fn sqlite3_filename_journal(sqlite3_filename_t filename):libc.cstr
+
+#linkid sqlite3_filename_wal
+fn sqlite3_filename_wal(sqlite3_filename_t filename):libc.cstr
+
+#linkid sqlite3_database_file_object
+fn sqlite3_database_file_object(libc.cstr z_name):rawptr<sqlite3_file_t>
+
+#linkid sqlite3_create_filename
+fn sqlite3_create_filename(libc.cstr z_database, libc.cstr z_journal, libc.cstr z_wal, i32 n_param, rawptr<libc.cstr> az_param):sqlite3_filename_t
+
+#linkid sqlite3_free_filename
+fn sqlite3_free_filename(sqlite3_filename_t filename)
+
+// SQLite 数据库句柄函数
+#linkid sqlite3_db_handle
+fn sqlite3_db_handle(rawptr<sqlite3_stmt_t> stmt):rawptr<sqlite3_t>
+
+#linkid sqlite3_db_name
+fn sqlite3_db_name(rawptr<sqlite3_t> db, i32 n):libc.cstr
+
+#linkid sqlite3_db_filename
+fn sqlite3_db_filename(rawptr<sqlite3_t> db, libc.cstr z_db_name):sqlite3_filename_t
+
+#linkid sqlite3_db_readonly
+fn sqlite3_db_readonly(rawptr<sqlite3_t> db, libc.cstr z_db_name):i32
+
+#linkid sqlite3_txn_state
+fn sqlite3_txn_state(rawptr<sqlite3_t> db, libc.cstr z_schema):i32
+
+#linkid sqlite3_next_stmt
+fn sqlite3_next_stmt(rawptr<sqlite3_t> p_db, rawptr<sqlite3_stmt_t> p_stmt):rawptr<sqlite3_stmt_t>
+
+// SQLite 钩子函数
+#linkid sqlite3_commit_hook
+fn sqlite3_commit_hook(rawptr<sqlite3_t> db, anyptr callback, anyptr user_data):anyptr
+
+#linkid sqlite3_rollback_hook
+fn sqlite3_rollback_hook(rawptr<sqlite3_t> db, anyptr callback, anyptr user_data):anyptr
+
+#linkid sqlite3_update_hook
+fn sqlite3_update_hook(rawptr<sqlite3_t> db, anyptr callback, anyptr user_data):anyptr
+
+// SQLite 自动清理函数
+#linkid sqlite3_autovacuum_pages
+fn sqlite3_autovacuum_pages(rawptr<sqlite3_t> db, anyptr callback, anyptr user_data, anyptr destructor):i32
+
+// SQLite 共享缓存函数
+#linkid sqlite3_enable_shared_cache
+fn sqlite3_enable_shared_cache(i32 enable):i32
+
+// SQLite 内存释放函数
+#linkid sqlite3_release_memory
+fn sqlite3_release_memory(i32 n):i32
+
+#linkid sqlite3_db_release_memory
+fn sqlite3_db_release_memory(rawptr<sqlite3_t> db):i32
+
+// SQLite 堆限制函数
+#linkid sqlite3_soft_heap_limit64
+fn sqlite3_soft_heap_limit64(sqlite3_int64_t n):sqlite3_int64_t
+
+#linkid sqlite3_hard_heap_limit64
+fn sqlite3_hard_heap_limit64(sqlite3_int64_t n):sqlite3_int64_t
+
+// SQLite 表列元数据函数
+#linkid sqlite3_table_column_metadata
+fn sqlite3_table_column_metadata(rawptr<sqlite3_t> db, libc.cstr z_db_name, libc.cstr z_table_name, libc.cstr z_column_name, rawptr<libc.cstr> pz_data_type, rawptr<libc.cstr> pz_coll_seq, rawptr<i32> p_not_null, rawptr<i32> p_primary_key, rawptr<i32> p_autoinc):i32
+
+// SQLite 扩展加载函数
+#linkid sqlite3_load_extension
+fn sqlite3_load_extension(rawptr<sqlite3_t> db, libc.cstr z_file, libc.cstr z_proc, rawptr<libc.cstr> pz_err_msg):i32
+
+#linkid sqlite3_enable_load_extension
+fn sqlite3_enable_load_extension(rawptr<sqlite3_t> db, i32 onoff):i32
+
+#linkid sqlite3_auto_extension
+fn sqlite3_auto_extension(anyptr x_entry_point):i32
+
+#linkid sqlite3_cancel_auto_extension
+fn sqlite3_cancel_auto_extension(anyptr x_entry_point):i32
+
+#linkid sqlite3_reset_auto_extension
+fn sqlite3_reset_auto_extension()
+
+// SQLite BLOB 处理函数
+#linkid sqlite3_blob_open
+fn sqlite3_blob_open(rawptr<sqlite3_t> db, libc.cstr z_db, libc.cstr z_table, libc.cstr z_column, sqlite3_int64_t i_row, i32 flags, rawptr<rawptr<sqlite3_blob_t>> pp_blob):i32
+
+#linkid sqlite3_blob_reopen
+fn sqlite3_blob_reopen(rawptr<sqlite3_blob_t> blob, sqlite3_int64_t i_row):i32
+
+#linkid sqlite3_blob_close
+fn sqlite3_blob_close(rawptr<sqlite3_blob_t> blob):i32
+
+#linkid sqlite3_blob_bytes
+fn sqlite3_blob_bytes(rawptr<sqlite3_blob_t> blob):i32
+
+#linkid sqlite3_blob_read
+fn sqlite3_blob_read(rawptr<sqlite3_blob_t> blob, anyptr z, i32 n, i32 i_offset):i32
+
+#linkid sqlite3_blob_write
+fn sqlite3_blob_write(rawptr<sqlite3_blob_t> blob, anyptr z, i32 n, i32 i_offset):i32
+
+// SQLite 备份函数
+#linkid sqlite3_backup_init
+fn sqlite3_backup_init(rawptr<sqlite3_t> p_dest, libc.cstr z_dest_name, rawptr<sqlite3_t> p_source, libc.cstr z_source_name):rawptr<sqlite3_backup_t>
+
+#linkid sqlite3_backup_step
+fn sqlite3_backup_step(rawptr<sqlite3_backup_t> p, i32 n_page):i32
+
+#linkid sqlite3_backup_finish
+fn sqlite3_backup_finish(rawptr<sqlite3_backup_t> p):i32
+
+#linkid sqlite3_backup_remaining
+fn sqlite3_backup_remaining(rawptr<sqlite3_backup_t> p):i32
+
+#linkid sqlite3_backup_pagecount
+fn sqlite3_backup_pagecount(rawptr<sqlite3_backup_t> p):i32
+
+// SQLite 解锁通知函数
+#linkid sqlite3_unlock_notify
+fn sqlite3_unlock_notify(rawptr<sqlite3_t> p_blocked, anyptr x_notify, anyptr p_notify_arg):i32
+
+// SQLite 字符串比较函数
+#linkid sqlite3_stricmp
+fn sqlite3_stricmp(libc.cstr str1, libc.cstr str2):i32
+
+#linkid sqlite3_strnicmp
+fn sqlite3_strnicmp(libc.cstr str1, libc.cstr str2, i32 n):i32
+
+#linkid sqlite3_strglob
+fn sqlite3_strglob(libc.cstr z_glob, libc.cstr z_str):i32
+
+#linkid sqlite3_strlike
+fn sqlite3_strlike(libc.cstr z_glob, libc.cstr z_str, u32 c_esc):i32
+
+// SQLite WAL 函数
+#linkid sqlite3_wal_hook
+fn sqlite3_wal_hook(rawptr<sqlite3_t> db, anyptr callback, anyptr user_data):anyptr
+
+#linkid sqlite3_wal_autocheckpoint
+fn sqlite3_wal_autocheckpoint(rawptr<sqlite3_t> db, i32 n):i32
+
+#linkid sqlite3_wal_checkpoint
+fn sqlite3_wal_checkpoint(rawptr<sqlite3_t> db, libc.cstr z_db):i32
+
+#linkid sqlite3_wal_checkpoint_v2
+fn sqlite3_wal_checkpoint_v2(rawptr<sqlite3_t> db, libc.cstr z_db, i32 e_mode, rawptr<i32> pn_log, rawptr<i32> pn_ckpt):i32
+
+// SQLite 状态函数
+#linkid sqlite3_status
+fn sqlite3_status(i32 op, rawptr<i32> p_current, rawptr<i32> p_highwater, i32 reset_flag):i32
+
+#linkid sqlite3_status64
+fn sqlite3_status64(i32 op, rawptr<sqlite3_int64_t> p_current, rawptr<sqlite3_int64_t> p_highwater, i32 reset_flag):i32
+
+#linkid sqlite3_db_status
+fn sqlite3_db_status(rawptr<sqlite3_t> db, i32 op, rawptr<i32> p_cur, rawptr<i32> p_hiwtr, i32 reset_flg):i32
+
+#linkid sqlite3_stmt_status
+fn sqlite3_stmt_status(rawptr<sqlite3_stmt_t> stmt, i32 op, i32 reset_flg):i32
+
+// SQLite 系统错误函数
+#linkid sqlite3_system_errno
+fn sqlite3_system_errno(rawptr<sqlite3_t> db):i32
+
+// SQLite 字符串构建器函数
+#linkid sqlite3_str_new
+fn sqlite3_str_new(rawptr<sqlite3_t> db):rawptr<sqlite3_str_t>
+
+#linkid sqlite3_str_finish
+fn sqlite3_str_finish(rawptr<sqlite3_str_t> str):libc.cstr
+
+#linkid sqlite3_str_vappendf
+fn sqlite3_str_vappendf(rawptr<sqlite3_str_t> str, libc.cstr z_format, anyptr args)
+
+#linkid sqlite3_str_append
+fn sqlite3_str_append(rawptr<sqlite3_str_t> str, libc.cstr z_in, i32 n)
+
+#linkid sqlite3_str_appendall
+fn sqlite3_str_appendall(rawptr<sqlite3_str_t> str, libc.cstr z_in)
+
+#linkid sqlite3_str_appendchar
+fn sqlite3_str_appendchar(rawptr<sqlite3_str_t> str, i32 n, i8 c)
+
+#linkid sqlite3_str_reset
+fn sqlite3_str_reset(rawptr<sqlite3_str_t> str)
+
+#linkid sqlite3_str_errcode
+fn sqlite3_str_errcode(rawptr<sqlite3_str_t> str):i32
+
+#linkid sqlite3_str_length
+fn sqlite3_str_length(rawptr<sqlite3_str_t> str):i32
+
+#linkid sqlite3_str_value
+fn sqlite3_str_value(rawptr<sqlite3_str_t> str):libc.cstr
+
+// SQLite 关键字函数
+#linkid sqlite3_keyword_count
+fn sqlite3_keyword_count():i32
+
+#linkid sqlite3_keyword_name
+fn sqlite3_keyword_name(i32 index, rawptr<libc.cstr> name, rawptr<i32> length):i32
+
+#linkid sqlite3_keyword_check
+fn sqlite3_keyword_check(libc.cstr name, i32 length):i32
+
+// SQLite 初始化和关闭函数
+#linkid sqlite3_initialize
+fn sqlite3_initialize():i32
+
+#linkid sqlite3_shutdown
+fn sqlite3_shutdown():i32
+
+#linkid sqlite3_os_init
+fn sqlite3_os_init():i32
+
+#linkid sqlite3_os_end
+fn sqlite3_os_end():i32
+
+// SQLite 自动提交函数
+#linkid sqlite3_get_autocommit
+fn sqlite3_get_autocommit(rawptr<sqlite3_t> db):i32
+
+// SQLite 睡眠函数
+#linkid sqlite3_sleep
+fn sqlite3_sleep(i32 ms):i32
+
+// SQLite 客户端数据函数
+#linkid sqlite3_get_clientdata
+fn sqlite3_get_clientdata(rawptr<sqlite3_t> db, libc.cstr key):anyptr
+
+#linkid sqlite3_set_clientdata
+fn sqlite3_set_clientdata(rawptr<sqlite3_t> db, libc.cstr key, anyptr data, anyptr destructor):i32
+
+// SQLite 序列化函数
+#linkid sqlite3_serialize
+fn sqlite3_serialize(rawptr<sqlite3_t> db, libc.cstr z_schema, rawptr<sqlite3_int64_t> pi_size, u32 m_flags):rawptr<u8>
+
+#linkid sqlite3_deserialize
+fn sqlite3_deserialize(rawptr<sqlite3_t> db, libc.cstr z_schema, rawptr<u8> p_data, sqlite3_int64_t sz_db, sqlite3_int64_t sz_buf, u32 m_flags):i32
+
+// SQLite 序列化标志
+const SQLITE_SERIALIZE_NOCOPY = 0x001
+const SQLITE_DESERIALIZE_FREEONCLOSE = 1
+const SQLITE_DESERIALIZE_RESIZEABLE = 2
+const SQLITE_DESERIALIZE_READONLY = 4
+
+// SQLite 数据库缓存刷新函数
+#linkid sqlite3_db_cacheflush
+fn sqlite3_db_cacheflush(rawptr<sqlite3_t> db):i32

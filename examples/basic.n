@@ -1,0 +1,73 @@
+import sqlite as *
+import libc
+import fmt
+
+fn main() {
+    rawptr<sqlite3_t> db = null
+    i32 rc = sqlite3_open('test.db'.to_cstr(), &db)
+    libc.cstr err_msg = 0
+
+    if rc != SQLITE_OK {
+        sqlite3_close(db)
+        throw errorf('cannot open database file')
+    }
+
+    println('connected to db')
+
+    var create_table_sql = `CREATE TABLE IF NOT EXISTS users( 
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        age INTEGER,
+        email TEXT);`
+
+
+    rc = sqlite3_exec(db, create_table_sql.to_cstr(), 0, 0, &err_msg)
+    if rc != SQLITE_OK {
+        var msg = err_msg.to_string()
+        sqlite3_free(err_msg as anyptr)
+        sqlite3_close(db)
+        throw errorf('failed to create table: %s', msg)
+    }
+
+    println('table created')
+
+    // insert data
+    var insert_data_sql = `INSERT INTO users(name, age, email) VALUES("alice", 25, "alice@example.com"),
+                       ("bob", 31, "bob@example.com"), ("charlie", 32, "charlie@example.com");`
+
+    rc = sqlite3_exec(db, insert_data_sql.to_cstr(), 0, 0, &err_msg)
+    if rc != SQLITE_OK {
+        var msg = err_msg.to_string()
+        sqlite3_free(err_msg as anyptr)
+        sqlite3_close(db)
+        throw errorf('failed to insert data: %s', msg)
+    }
+
+    println('data inserted')
+
+    // select data
+    var select_data_sql = 'SELECT id, name, age, email FROM users;'
+
+    rawptr<sqlite3_stmt_t> stmt = null
+    rc = sqlite3_prepare_v2(db, select_data_sql.to_cstr(), -1, &stmt, null)
+
+    if rc != SQLITE_OK {
+        sqlite3_close(db)
+        throw errorf('failed to prepare statement: %s', sqlite3_errmsg(db).to_string())
+    }
+
+    println('exec result:')
+    for sqlite3_step(stmt) == SQLITE_ROW {
+        var id = sqlite3_column_int(stmt, 0)
+        var name = sqlite3_column_text(stmt, 1)
+        var age = sqlite3_column_int(stmt, 2)
+        var email = sqlite3_column_text(stmt, 3)
+        
+        fmt.printf('ID: %d, Name: %s, Age: %d, Email: %s\n', 
+                id, name.to_string(), age, email.to_string())
+    }
+
+    sqlite3_finalize(stmt)
+    sqlite3_close(db)
+    println('finished')
+}
